@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 }
 
 // 缓存相关设置
-$cacheTime = 300; // 缓存时间5分钟（300秒）
+$cacheTime = 600; // 缓存时间5分钟（300秒）
 $cacheDir = __DIR__ . '/cache/';
 if (!is_dir($cacheDir)) {
     mkdir($cacheDir, 0755, true);
@@ -124,12 +124,50 @@ function searchFiles($conn, $offset, $limit) {
 
 // 照片接口
 function getPhotos($conn, $offset, $limit) {
-    $query = "SELECT * FROM files WHERE type = 0 AND folder_id IN (SELECT id FROM folders WHERE attribute = 0) ORDER BY created_at DESC LIMIT ?, ?";
+    // 获取可选参数 folder_id 和 password
+    $folder_id = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
+    $password = isset($_GET['password']) ? $_GET['password'] : null;
+
+    // 验证文件夹密码（如果指定了 folder_id 且该文件夹需要密码）
+    if ($folder_id) {
+        $query = "SELECT password FROM folders WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $folder_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            // 如果文件夹设置了密码且密码不匹配，返回错误
+            if ($row['password'] && $row['password'] !== $password) {
+                echo json_encode(["error" => "文件夹密码错误"]);
+                return;
+            }
+        } else {
+            echo json_encode(["error" => "文件夹不存在"]);
+            return;
+        }
+    }
+
+    // 构建 SQL 查询
+    $query = "SELECT * FROM files";
+    if ($folder_id) {
+        $query .= " WHERE folder_id = ?";
+    } else {
+        $query .= " WHERE type = 0 AND folder_id IN (SELECT id FROM folders WHERE attribute = 0)";
+    }
+    $query .= " ORDER BY created_at DESC LIMIT ?, ?";
+
+    // 准备并执行查询
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $offset, $limit);
+    if ($folder_id) {
+        $stmt->bind_param("iii", $folder_id, $offset, $limit);
+    } else {
+        $stmt->bind_param("ii", $offset, $limit);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // 获取查询结果并格式化数据
     $photos = [];
     while ($row = $result->fetch_assoc()) {
         $photos[] = $row;
