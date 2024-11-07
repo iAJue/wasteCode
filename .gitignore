@@ -1,0 +1,116 @@
+.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+*.log.*
+*.tlog
+*.log.[0-9]*
+*.out
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+*.gz
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs and editors
+# JetBrains (IntelliJ IDEA, PyCharm, WebStorm)
+.idea/
+# VS Code
+.vscode/
+*.code-workspace
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.whl
+venv/
+myenv/
+.env
+.venv
+.Python
+*.manifest
+*.spec
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+
+# macOS
+*.DS_Store
+
+# Compiled code
+*.class
+*.o
+*.so
+*.dll
+*.exe
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Logs and databases
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# Packages
+*.dmg
+*.iso
+
+# Image files (if you want to ignore raw photos in projects that don’t need them)
+*.tiff
+*.tif
+*.psd
+
+# Temporary files
+*.swp
+*.swo
+*.bak
+*~
+*.tmp
+
+# Project-specific folders
+# Uncomment and adjust based on your specific project needs
+dist/          
+build/         
+coverage/      
+tmp/           
+
+# Backup files
+*.bak
+
+# Generated files
+*.map
+*.js.map
+*.css.map
