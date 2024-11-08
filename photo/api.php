@@ -39,9 +39,6 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
     ob_start(); // 启用输出缓冲区
     switch ($action) {
-        case "search":
-            searchFiles($conn, $offset, $limit);
-            break;
         case "photos":
             getPhotos($conn, $offset, $limit);
             break;
@@ -107,26 +104,14 @@ function formatDataByDate($data) {
     return array_values($groupedData);
 }
 
-// 搜索接口
-function searchFiles($conn, $offset, $limit) {
-    $query = "SELECT * FROM files WHERE folder_id IN (SELECT id FROM folders WHERE attribute = 0) ORDER BY created_at DESC LIMIT ?, ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $offset, $limit);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    $files = [];
-    while ($row = $result->fetch_assoc()) {
-        $files[] = $row;
-    }
-    echo json_encode(formatDataByDate($files));
-}
 
 // 照片接口
 function getPhotos($conn, $offset, $limit) {
-    // 获取可选参数 folder_id 和 password
+    // 获取可选参数 folder_id、password 和 search
     $folder_id = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
     $password = isset($_GET['password']) ? $_GET['password'] : null;
+    $search = isset($_GET['search']) ? $_GET['search'] : null;
+
 
     // 验证文件夹密码（如果指定了 folder_id 且该文件夹需要密码）
     if ($folder_id) {
@@ -150,20 +135,45 @@ function getPhotos($conn, $offset, $limit) {
 
     // 构建 SQL 查询
     $query = "SELECT * FROM files";
+    $conditions = [];
+    $params = [];
+    $types = "";
+
+    // 处理 folder_id 条件
     if ($folder_id) {
-        $query .= " WHERE folder_id = ?";
+        $conditions[] = "folder_id = ?";
+        $params[] = $folder_id;
+        $types .= "i";
     } else {
-        $query .= " WHERE type = 0 AND folder_id IN (SELECT id FROM folders WHERE attribute = 0)";
+        if ($search) {
+            $conditions[] = "folder_id IN (SELECT id FROM folders WHERE attribute = 0)";
+        }else {
+            $conditions[] = "type = 0 AND folder_id IN (SELECT id FROM folders WHERE attribute = 0)";
+        }
+    }
+
+    // 处理 search 条件
+    if ($search) {
+        $conditions[] = "(name LIKE ? OR data LIKE ?)";
+        $params[] = "%$search%";
+        $params[] = "%$search%";
+        $types .= "ss";
+    }
+
+    // 将条件组合到查询中
+    if ($conditions) {
+        $query .= " WHERE " . implode(" AND ", $conditions);
     }
     $query .= " ORDER BY created_at DESC LIMIT ?, ?";
 
+    // 设置分页参数
+    $params[] = $offset;
+    $params[] = $limit;
+    $types .= "ii";
+
     // 准备并执行查询
     $stmt = $conn->prepare($query);
-    if ($folder_id) {
-        $stmt->bind_param("iii", $folder_id, $offset, $limit);
-    } else {
-        $stmt->bind_param("ii", $offset, $limit);
-    }
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -181,7 +191,8 @@ function getAlbums($conn) {
         SELECT 
             f.id AS folder_id, 
             f.name AS folder_name, 
-            f.created_at, 
+            f.created_at, f.attribute,
+            f.password,
             COUNT(files.id) AS photo_count, 
             (SELECT files.data 
              FROM files 
@@ -192,8 +203,6 @@ function getAlbums($conn) {
             folders f 
         LEFT JOIN 
             files ON files.folder_id = f.id 
-        WHERE 
-            f.attribute = 0 
         GROUP BY 
             f.id 
         ORDER BY 
@@ -208,7 +217,9 @@ function getAlbums($conn) {
             "folder_name" => $row["folder_name"],
             "created_at" => $row["created_at"],
             "photo_count" => $row["photo_count"],
-            "latest_image" => $row["latest_image"]
+            "latest_image" => $row["latest_image"],
+            'attribute' => $row['attribute'],
+            "ispassword" => !!$row['password']
         ];
     }
 
@@ -217,7 +228,7 @@ function getAlbums($conn) {
 
 // 随机接口
 function getRandomMedia($conn, $offset, $limit) {
-    $query = "SELECT * FROM files WHERE folder_id IN (SELECT id FROM folders WHERE attribute = 0) ORDER BY RAND() LIMIT ?, ?";
+    $query = "SELECT * FROM files WHERE folder_id IN (SELECT id FROM folders WHERE attribute = 0) LIMIT ?, ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $offset, $limit);
     $stmt->execute();
@@ -227,6 +238,6 @@ function getRandomMedia($conn, $offset, $limit) {
     while ($row = $result->fetch_assoc()) {
         $media[] = $row;
     }
-    echo json_encode(formatDataByDate($media));
+    echo json_encode($media);
 }
 ?>
