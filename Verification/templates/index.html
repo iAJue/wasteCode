@@ -1,0 +1,25 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>裁剪后背景图片</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .images img {
+            border: 2px solid #000;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>裁剪后背景图片</h1>
+        <img src="data:image/jpeg;base64,{{ modified_image }}" alt="Modified Background" width="800">
+    </div>
+</body>
+</html>
