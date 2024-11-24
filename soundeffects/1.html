@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音频播放器 - 音效选择</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    audio {
+      margin: 20px 0;
+      width: 100%;
+      max-width: 600px;
+    }
+    input[type="range"] {
+      width: 300px;
+      margin: 10px;
+    }
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .effect-group {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>音频播放器 - 音效选择</h1>
+  <audio id="audio" src="./your-audio-file.mp3" controls></audio>
+  
+  <div class="effect-group">
+    <label for="bass">低音调节：</label>
+    <input id="bass" type="range" min="-30" max="30" step="1" value="0">
+    <span id="bassValue">未设置</span>
+  </div>
+  
+  <div class="effect-group">
+    <label for="treble">高音调节：</label>
+    <input id="treble" type="range" min="-30" max="30" step="1" value="0">
+    <span id="trebleValue">未设置</span>
+  </div>
+  
+  <div class="effect-group">
+    <label for="reverb">混响效果：</label>
+    <input id="reverb" type="range" min="0" max="1" step="0.1" value="0">
+    <span id="reverbValue">未设置</span>
+  </div>
+  
+  <div class="effect-group">
+    <label for="delay">延迟效果：</label>
+    <input id="delay" type="range" min="0" max="1" step="0.1" value="0">
+    <span id="delayValue">未设置</span>
+  </div>
+  
+  <div class="effect-group">
+    <label for="volume">音量调节：</label>
+    <input id="volume" type="range" min="0" max="1" step="0.1" value="0.5">
+    <span id="volumeValue">未设置</span>
+  </div>
+
+  <script>
+    // 获取 DOM 元素
+    const audioElement = document.getElementById('audio');
+    const bassSlider = document.getElementById('bass');
+    const bassValueDisplay = document.getElementById('bassValue');
+    const trebleSlider = document.getElementById('treble');
+    const trebleValueDisplay = document.getElementById('trebleValue');
+    const reverbSlider = document.getElementById('reverb');
+    const reverbValueDisplay = document.getElementById('reverbValue');
+    const delaySlider = document.getElementById('delay');
+    const delayValueDisplay = document.getElementById('delayValue');
+    const volumeSlider = document.getElementById('volume');
+    const volumeValueDisplay = document.getElementById('volumeValue');
+
+    // 创建 Web Audio API 上下文
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const track = audioContext.createMediaElementSource(audioElement);
+
+    // 创建低通滤波器（低音）
+    const bassFilter = audioContext.createBiquadFilter();
+    bassFilter.type = 'lowshelf';
+    bassFilter.frequency.value = 200;
+
+    // 创建高通滤波器（高音）
+    const trebleFilter = audioContext.createBiquadFilter();
+    trebleFilter.type = 'highshelf';
+    trebleFilter.frequency.value = 3000;
+
+    // 创建混响节点
+    const reverb = audioContext.createConvolver();
+    const reverbBuffer = audioContext.createBuffer(2, audioContext.sampleRate * 3, audioContext.sampleRate);
+    for (let i = 0; i < reverbBuffer.numberOfChannels; i++) {
+      const channelData = reverbBuffer.getChannelData(i);
+      for (let j = 0; j < channelData.length; j++) {
+        channelData[j] = (Math.random() * 2 - 1) * 0.2; // 创建简单混响
+      }
+    }
+    reverb.buffer = reverbBuffer;
+
+    // 创建延迟（回声）节点
+    const delay = audioContext.createDelay();
+
+    // 创建增益节点（音量控制）
+    const gainNode = audioContext.createGain();
+
+    // 连接音频节点
+    track.connect(bassFilter)
+         .connect(trebleFilter)
+         .connect(reverb)
+         .connect(delay)
+         .connect(gainNode)
+         .connect(audioContext.destination);
+
+    // 滑块事件监听
+    bassSlider.addEventListener('input', () => {
+      const bassGain = parseFloat(bassSlider.value);
+      bassFilter.gain.setValueAtTime(bassGain, audioContext.currentTime);
+      bassValueDisplay.textContent = bassGain || '未设置';
+    });
+
+    trebleSlider.addEventListener('input', () => {
+      const trebleGain = parseFloat(trebleSlider.value);
+      trebleFilter.gain.setValueAtTime(trebleGain, audioContext.currentTime);
+      trebleValueDisplay.textContent = trebleGain || '未设置';
+    });
+
+    reverbSlider.addEventListener('input', () => {
+      const reverbLevel = parseFloat(reverbSlider.value);
+      gainNode.gain.setValueAtTime(reverbLevel, audioContext.currentTime);
+      reverbValueDisplay.textContent = reverbLevel || '未设置';
+    });
+
+    delaySlider.addEventListener('input', () => {
+      const delayTime = parseFloat(delaySlider.value);
+      delay.delayTime.setValueAtTime(delayTime, audioContext.currentTime);
+      delayValueDisplay.textContent = delayTime || '未设置';
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      const volumeLevel = parseFloat(volumeSlider.value);
+      gainNode.gain.setValueAtTime(volumeLevel, audioContext.currentTime);
+      volumeValueDisplay.textContent = volumeLevel || '未设置';
+    });
+
+    // 确保用户交互后启动 AudioContext
+    audioElement.addEventListener('play', () => {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    });
+  </script>
+</body>
+</html>
