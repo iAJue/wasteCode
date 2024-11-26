@@ -1,4 +1,5 @@
 .env
+*.mp4
 
 # Node.js
 node_modules/
@@ -114,3 +115,4 @@ tmp/
 *.map
 *.js.map
 *.css.map
+photo/视频/12.Haku-Gentleman（water）.mp4_compressed.mp4

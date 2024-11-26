@@ -226,11 +226,35 @@ function getAlbums($conn) {
     echo json_encode($albums);
 }
 
-// 随机接口
-function getRandomMedia($conn, $offset, $limit) {
-    $query = "SELECT * FROM files WHERE folder_id IN (SELECT id FROM folders WHERE attribute = 0) LIMIT ?, ?";
+// 随机接口(该方法效率较低,尽可能不要频繁执行,并确保有缓存存在)
+function getRandomMedia($conn, $page, $limit) {
+    // 每种类型分配的记录数，尽量平分
+    $typeLimit = ceil($limit / 2);
+
+    // 分别查询图片和视频
+    $query = "
+        (
+            SELECT f.*
+            FROM files f
+            JOIN folders fo ON f.folder_id = fo.id
+            WHERE fo.attribute = 0 AND f.type = 0
+            ORDER BY RAND()
+            LIMIT ?
+        )
+        UNION ALL
+        (
+            SELECT f.*
+            FROM files f
+            JOIN folders fo ON f.folder_id = fo.id
+            WHERE fo.attribute = 0 AND f.type = 1
+            ORDER BY RAND()
+            LIMIT ?
+        )
+        ORDER BY RAND()
+        LIMIT ?";
+    
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $offset, $limit);
+    $stmt->bind_param("iii", $typeLimit, $typeLimit, $limit);
     $stmt->execute();
     $result = $stmt->get_result();
 
