@@ -88,21 +88,25 @@ try {
 
     // 解析响应内容
     $responseData = json_decode($response, true);
-    if (!$responseData || !isset($responseData['src'])) {
+    if (!$responseData || !isset($responseData[0]['src'])) {
         throw new Exception("无效的响应格式");
     }
-
+    
     // 获取完整URL
-    $relative_path = ltrim($responseData['src'], '/');
+    $relative_path = ltrim($responseData[0]['src'], '/');
     $full_url = $domain_prefix . '/' . $relative_path;
 
     // 创建文件夹记录
     $folder_id = create_folder_if_not_exists($conn, $folder_name, $attribute, $folder_password);
-
+   
+    $zero_type = 0;
     // 插入文件记录
     $created_at = date('Y-m-d H:i:s');
-    $stmt = $conn->prepare("INSERT INTO files (folder_id, name, size, type, url, created_at) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isssss", $folder_id, $file_name, $file_size, $file_type, $full_url, $created_at);
+    $stmt = $conn->prepare("INSERT INTO files (folder_id, name, size, type, data, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+    if ($stmt === false) {
+        throw new Exception("SQL准备失败: " . $conn->error);
+    }
+    $stmt->bind_param("isssss", $folder_id, $file_name, $file_size, $zero_type, $full_url, $created_at);
 
     if (!$stmt->execute()) {
         throw new Exception("数据库插入失败: " . $stmt->error);

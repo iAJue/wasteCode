@@ -35,6 +35,13 @@
             
             <!-- 配置表单 -->
             <form class="layui-form" id="uploadForm">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">上传地址</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="upload_url" required lay-verify="required" 
+                               class="layui-input">
+                    </div>
+                </div>
                 <div class="layui-row layui-col-space20">
                     <!-- 左侧配置列 -->
                     <div class="layui-col-md6">
@@ -59,10 +66,24 @@
                                        class="layui-input" value="root">
                             </div>
                         </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">文件类型</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="attribute" required lay-verify="required"
+                                       class="layui-input" placeholder="0：正常，1：隐私，2:18+">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 右侧配置列 -->
                     <div class="layui-col-md6">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">域名前缀</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="domain_prefix" required lay-verify="required"
+                                       class="layui-input">
+                            </div>
+                        </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">数据库密码</label>
                             <div class="layui-input-block">
@@ -145,6 +166,9 @@
         const saveConfig = () => {
             const config = {
                 auth_password: document.querySelector('[name=auth_password]').value,
+                upload_url: document.querySelector('[name=upload_url]').value,
+                domain_prefix: document.querySelector('[name=domain_prefix]').value,
+                attribute: document.querySelector('[name=attribute]').value,
                 db_host: document.querySelector('[name=db_host]').value,
                 db_user: document.querySelector('[name=db_user]').value,
                 db_password: document.querySelector('[name=db_password]').value,
