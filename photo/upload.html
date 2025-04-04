@@ -110,10 +110,10 @@
 
                 <!-- 文件选择区域 -->
                 <div class="layui-form-item">
-                    <label class="layui-form-label">选择文件夹</label>
+                    <label class="layui-form-label">选择图片</label>
                     <div class="layui-input-block">
-                        <input type="file" name="folder" id="folder" 
-                               webkitdirectory directory class="layui-input">
+                        <input type="file" name="files" id="files" 
+                               multiple accept="image/*" class="layui-input">
                     </div>
                 </div>
 
@@ -208,7 +208,7 @@
             });
 
             // 文件选择监听
-            document.getElementById('folder').addEventListener('change', function(e) {
+            document.getElementById('files').addEventListener('change', function(e) {
                 const files = Array.from(e.target.files).filter(file => 
                     file.type.startsWith('image/')
                 );
@@ -228,7 +228,7 @@
             // 表单提交（一键上传）
             form.on('submit(startUpload)', function(){
                 if(!uploadQueue.length) {
-                    layer.msg('请先选择包含图片的文件夹');
+                    layer.msg('请先选择图片文件');
                     return false;
                 }
                 
