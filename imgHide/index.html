@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>隐藏文本图像生成器</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; background: #222; color: #eee; }
+    canvas { display: none; }
+    input, button { padding: 0.5em; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h1>🕵️‍♂️ 隐藏文本图像生成器</h1>
+  <input id="textInput" placeholder="输入要隐藏的文字" size="40">
+  <button onclick="generate()">生成图像</button>
+  <p><a id="downloadLink" style="display:none;" download="hidden-text.png">下载图像</a></p>
+  <canvas id="canvas" width="800" height="400"></canvas>
+  //使用 Photoshop、Lightroom 或手机的图像编辑软件提升「曝光、亮度、对比度」，就能看到隐藏的内容了！
+  <script>
+    function generate() {
+      const text = document.getElementById('textInput').value;
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // 背景填充为纯黑
+      ctx.fillStyle = 'rgb(0, 0, 0)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 设置极低亮度文字颜色（几乎黑）
+      ctx.fillStyle = 'rgb(5, 5, 5)'; // 可以调高一点测试效果，比如 rgb(10, 10, 10)
+      ctx.font = '48px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      // 生成下载链接
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.getElementById('downloadLink');
+      link.href = dataURL;
+      link.style.display = 'inline';
+      link.textContent = '📷 下载隐藏图像';
+    }
+  </script>
+</body>
+</html>
